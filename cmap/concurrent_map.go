@@ -1,8 +1,7 @@
-package lb
+package cmap
 
 import (
 	"encoding/json"
-	"math/rand"
 	"sync"
 )
 
@@ -14,8 +13,8 @@ const (
 	min_shard = 5
 	max_shard = 64
 )
-var (
-	hash_table = []uint32{998244353, 131 , 16777619, 19190817}
+const (
+	hash_base = 131
 )
 var(
 	//分段大小
@@ -30,7 +29,7 @@ type ConcurrentMapShared struct{
 	sync.RWMutex
 }
 //最好设置成32
-func New(shard int) *ConcurrentMap{
+func NewConcurrentMap(shard int) *ConcurrentMap{
 	if shard > max_shard || shard < min_shard{
 		shard = SHARD_COUNT
 	}
@@ -44,8 +43,8 @@ func New(shard int) *ConcurrentMap{
 func fnv32(key string) uint32 {
 	hash := uint32(2166136261)
 	var prime32 uint32
+	prime32 = uint32(hash_base)
 	for i := 0; i < len(key); i++ {
-		prime32 = hash_table[uint32(rand.Intn(4))]
 		hash *= prime32
 		hash ^= uint32(key[i])
 	}
@@ -202,7 +201,7 @@ func (m *ConcurrentMap) Items() map[string]interface{} {
 
 
 // Keys 将以[]string的形式返回所有的keys
-func (m *ConcurrentMap) Keys() []string {
+func (m ConcurrentMap) Keys() []string {
 	count := m.Count()
 	ch := make(chan string, count)
 	//以协程的方式读key
